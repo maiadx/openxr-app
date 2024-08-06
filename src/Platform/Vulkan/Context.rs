@@ -1,12 +1,13 @@
 use ash::{vk, Entry, Instance, Device};
-use ash::extensions::khr::{Surface, Swapchain};
+use ash::extensions::khr::Surface;
+use ash::extensions::khr::Swapchain;
+use ash::extensions::ext::DebugUtils;
 use std::ffi::CString;
 use std::marker::{PhantomData, PhantomPinned};
 use std::ptr;
 
 #[cfg(feature = "build_debug")]
 const USE_VK_VALIDATION_LAYERS: bool = true;
-
 #[cfg(not(feature = "build_debug"))]
 const USE_VK_VALIDATION_LAYERS: bool = false;
 
@@ -88,7 +89,7 @@ struct VulkanContext {
 
 impl VulkanContext {
     fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let entry = unsafe { Entry::new()? };
+        let entry = unsafe { Entry::linked() };
         let app_name = CString::new("Vulkan Application")?;
         let engine_name = CString::new("No Engine")?;
     
@@ -106,7 +107,7 @@ impl VulkanContext {
         let layer_names = [CString::new("VK_LAYER_KHRONOS_validation")?];
         let layer_names_raw: Vec<*const i8> = layer_names.iter().map(|layer_name| layer_name.as_ptr()).collect();
     
-        let extension_names_raw = vec![ash::extensions::ext::DebugUtils::name().as_ptr()];
+        let extension_names_raw: Vec<*const i8> = vec![ash::extensions::ext::DebugUtils::name().as_ptr()];
     
         let create_info = vk::InstanceCreateInfo {
             s_type: vk::StructureType::INSTANCE_CREATE_INFO,

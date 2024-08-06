@@ -1,4 +1,10 @@
 
+use ash::{vk, Entry, Instance, Device};
+
+
+
+
+
 pub struct VulkanSwapChain {
     swapchain: vk::SwapchainKHR,
     images: Vec<vk::Image>,
@@ -206,6 +212,10 @@ impl VulkanSwapChain {
 
 impl Drop for VulkanSwapChain {
     fn drop(&mut self) {
-        self.destroy(&device);
+        // Assuming `device` is stored in `self` or accessible via another stored reference
+        if let Some(device) = self.device.as_ref() {
+            self.destroy(device);
+        }
     }
 }
+
