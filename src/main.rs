@@ -2,6 +2,11 @@ use openxr as xr;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
+#[macro_use]
+mod Log;
+
+mod Platform;
+
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load the OpenXR runtime
