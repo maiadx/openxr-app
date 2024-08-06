@@ -1,4 +1,5 @@
 use ash::{vk, Entry, Instance, Device};
+use ash::extensions::khr::{Surface, Swapchain};
 use std::ffi::CString;
 use std::marker::{PhantomData, PhantomPinned};
 use std::ptr;

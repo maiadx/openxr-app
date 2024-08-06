@@ -1,14 +1,3 @@
-use ash::version::{EntryV1_0, InstanceV1_0, DeviceV1_0};
-use ash::extensions::khr::{Surface, Swapchain};
-use ash::{vk, Entry, Instance};
-use std::ffi::CString;
-use std::os::raw::c_char;
-use std::ptr;
-
-use ash::version::DeviceV1_0;
-use ash::vk;
-use std::ffi::CString;
-use std::ptr;
 
 pub struct VulkanSwapChain {
     swapchain: vk::SwapchainKHR,
@@ -23,7 +12,13 @@ pub struct VulkanSwapChain {
 }
 
 impl VulkanSwapChain {
-    pub fn create(device: &ash::Device, physical_device: vk::PhysicalDevice, surface: vk::SurfaceKHR, surface_loader: &ash::extensions::khr::Surface, swapchain_loader: &ash::extensions::khr::Swapchain) -> Self {
+    pub fn create(
+        device: &Device,
+        physical_device: vk::PhysicalDevice,
+        surface: vk::SurfaceKHR,
+        surface_loader: &Surface,
+        swapchain_loader: &Swapchain,
+    ) -> Self {
         // Query support details and choose settings
         let swap_chain_support = Self::query_swapchain_support(physical_device, surface, surface_loader);
         let surface_format = Self::choose_swap_surface_format(&swap_chain_support.formats);
@@ -31,7 +26,7 @@ impl VulkanSwapChain {
         let extent = Self::choose_swap_extent(&swap_chain_support.capabilities);
 
         let image_count = swap_chain_support.capabilities.min_image_count + 1;
-        let min_image_count = if swap_chain_support.capabilities.max_image_count > 0 {
+        let image_count = if swap_chain_support.capabilities.max_image_count > 0 {
             image_count.min(swap_chain_support.capabilities.max_image_count)
         } else {
             image_count
@@ -39,7 +34,7 @@ impl VulkanSwapChain {
 
         let create_info = vk::SwapchainCreateInfoKHR::builder()
             .surface(surface)
-            .min_image_count(min_image_count)
+            .min_image_count(image_count)
             .image_format(surface_format.format)
             .image_color_space(surface_format.color_space)
             .image_extent(extent)
@@ -79,7 +74,11 @@ impl VulkanSwapChain {
         }
     }
 
-    fn query_swapchain_support(physical_device: vk::PhysicalDevice, surface: vk::SurfaceKHR, surface_loader: &ash::extensions::khr::Surface) -> SwapChainSupportDetails {
+    fn query_swapchain_support(
+        physical_device: vk::PhysicalDevice,
+        surface: vk::SurfaceKHR,
+        surface_loader: &Surface,
+    ) -> SwapChainSupportDetails {
         let capabilities = unsafe {
             surface_loader
                 .get_physical_device_surface_capabilities(physical_device, surface)
@@ -144,7 +143,7 @@ impl VulkanSwapChain {
         }
     }
 
-    fn create_image_views(device: &ash::Device, images: &[vk::Image], format: vk::Format) -> Vec<vk::ImageView> {
+    fn create_image_views(device: &Device, images: &[vk::Image], format: vk::Format) -> Vec<vk::ImageView> {
         images
             .iter()
             .map(|&image| {
@@ -169,13 +168,13 @@ impl VulkanSwapChain {
                 unsafe {
                     device
                         .create_image_view(&create_info, None)
-                        .expect("Failed to create image views")
+                        .expect("Failed to create image view")
                 }
             })
             .collect()
     }
 
-    pub fn destroy(&self, device: &ash::Device) {
+    pub fn destroy(&self, device: &Device) {
         unsafe {
             for &framebuffer in &self.framebuffers {
                 device.destroy_framebuffer(framebuffer, None);
@@ -198,10 +197,6 @@ impl VulkanSwapChain {
         }
     }
 
-    // Additional methods for creating render pass, framebuffers, command buffers, etc.
-    // ...
-
-    // Define `SwapChainSupportDetails` struct
     struct SwapChainSupportDetails {
         capabilities: vk::SurfaceCapabilitiesKHR,
         formats: Vec<vk::SurfaceFormatKHR>,
