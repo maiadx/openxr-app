@@ -1,4 +1,7 @@
+#[allow(non_snake_case)]
+
 use openxr as xr;
+
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;

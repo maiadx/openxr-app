@@ -17,6 +17,12 @@ pub struct VulkanSwapChain {
     command_buffers: Vec<vk::CommandBuffer>,
 }
 
+pub struct SwapChainSupportDetails {
+    pub capabilities: vk::SurfaceCapabilitiesKHR,
+    pub formats: Vec<vk::SurfaceFormatKHR>,
+    pub present_modes: Vec<vk::PresentModeKHR>,
+}
+
 impl VulkanSwapChain {
     pub fn create(
         device: &Device,
