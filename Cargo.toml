@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 chrono = "0.4.31"
 winit = "0.28"
-ash =  "0.38"
+ash =  { version="0.38.0", features = ["static"] }
 ash-window = "0.13"
 raw-window-handle = "0.6"
 openxr = "0.19.0"

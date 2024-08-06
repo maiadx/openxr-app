@@ -1,16 +1,48 @@
-use ash::version::DeviceV1_0;
 use ash::vk;
+use ash::Device;
 use std::ffi::CString;
-use std::path::Path;
+use std::marker::PhantomData;
 use std::ptr;
-
-pub struct VulkanGraphicsPipeline {
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
+pub struct VulkanGraphicsPipeline<'a> {
     pub pipeline: vk::Pipeline,
     pub layout: vk::PipelineLayout,
+    device: &'a Device,
 }
 
-impl VulkanGraphicsPipeline {
-    pub fn create(device: &ash::Device, swapchain_extent: vk::Extent2D, render_pass: vk::RenderPass) -> Self {
+impl<'a> VulkanGraphicsPipeline<'a> {
+
+    fn read_shader_code<P: AsRef<Path>>(path: P) -> Vec<u8> {
+        let mut file = File::open(path).expect("Failed to open shader file");
+        let mut code = Vec::new();
+        file.read_to_end(&mut code).expect("Failed to read shader file");
+        code
+    }
+
+    fn create_shader_module(device: &Device, code: &[u8]) -> vk::ShaderModule {
+        let code_u32 = ash::util::read_spv(&mut std::io::Cursor::new(code))
+            .expect("Failed to read shader SPIR-V code");
+    
+        let create_info = vk::ShaderModuleCreateInfo {
+            s_type: vk::StructureType::SHADER_MODULE_CREATE_INFO,
+            p_next: std::ptr::null(),
+            flags: vk::ShaderModuleCreateFlags::empty(),
+            code_size: code_u32.len() * std::mem::size_of::<u32>(),
+            p_code: code_u32.as_ptr(),
+            _marker: PhantomData
+        };
+    
+        unsafe {
+            device.create_shader_module(&create_info, None)
+                .expect("Failed to create shader module")
+        }
+    }
+
+
+
+    pub fn create(device: &'a Device, swapchain_extent: vk::Extent2D, render_pass: vk::RenderPass) -> Self {
         let vert_shader_code = Self::read_shader_code("path/to/vert.spv");
         let frag_shader_code = Self::read_shader_code("path/to/frag.spv");
 
@@ -19,86 +51,78 @@ impl VulkanGraphicsPipeline {
 
         let main_function_name = CString::new("main").unwrap();
 
-        let vert_shader_stage_info = vk::PipelineShaderStageCreateInfo::builder()
+        let vert_shader_stage_info = vk::PipelineShaderStageCreateInfo::default()
             .stage(vk::ShaderStageFlags::VERTEX)
             .module(vert_shader_module)
-            .name(&main_function_name)
-            .build();
+            .name(&main_function_name);
 
-        let frag_shader_stage_info = vk::PipelineShaderStageCreateInfo::builder()
+        let frag_shader_stage_info = vk::PipelineShaderStageCreateInfo::default()
             .stage(vk::ShaderStageFlags::FRAGMENT)
             .module(frag_shader_module)
-            .name(&main_function_name)
-            .build();
+            .name(&main_function_name);
 
         let shader_stages = [vert_shader_stage_info, frag_shader_stage_info];
 
-        let vertex_input_info = vk::PipelineVertexInputStateCreateInfo::builder()
-            .vertex_binding_descriptions(&[])
-            .vertex_attribute_descriptions(&[])
-            .build();
+        let vertex_input_info = vk::PipelineVertexInputStateCreateInfo::default();
 
-        let input_assembly = vk::PipelineInputAssemblyStateCreateInfo::builder()
+        let input_assembly = vk::PipelineInputAssemblyStateCreateInfo::default()
             .topology(vk::PrimitiveTopology::TRIANGLE_LIST)
-            .primitive_restart_enable(false)
-            .build();
+            .primitive_restart_enable(false);
 
-        let viewport = vk::Viewport::builder()
-            .x(0.0)
-            .y(0.0)
-            .width(swapchain_extent.width as f32)
-            .height(swapchain_extent.height as f32)
-            .min_depth(0.0)
-            .max_depth(1.0)
-            .build();
+        let viewport = vk::Viewport {
+            x: 0.0,
+            y: 0.0,
+            width: swapchain_extent.width as f32,
+            height: swapchain_extent.height as f32,
+            min_depth: 0.0,
+            max_depth: 1.0,
+        };
 
-        let scissor = vk::Rect2D::builder()
-            .offset(vk::Offset2D { x: 0, y: 0 })
-            .extent(swapchain_extent)
-            .build();
+        let scissor = vk::Rect2D {
+            offset: vk::Offset2D { x: 0, y: 0 },
+            extent: swapchain_extent,
+        };
 
-        let viewport_state = vk::PipelineViewportStateCreateInfo::builder()
-            .viewports(&[viewport])
-            .scissors(&[scissor])
-            .build();
+        let viewports = [viewport];
+        let scissors = [scissor];
 
-        let rasterizer = vk::PipelineRasterizationStateCreateInfo::builder()
+        let viewport_state = vk::PipelineViewportStateCreateInfo::default()
+            .viewports(&viewports)
+            .scissors(&scissors);
+
+        let rasterizer = vk::PipelineRasterizationStateCreateInfo::default()
             .depth_clamp_enable(false)
             .rasterizer_discard_enable(false)
             .polygon_mode(vk::PolygonMode::FILL)
             .line_width(1.0)
             .cull_mode(vk::CullModeFlags::BACK)
             .front_face(vk::FrontFace::CLOCKWISE)
-            .depth_bias_enable(false)
-            .build();
+            .depth_bias_enable(false);
 
-        let multisampling = vk::PipelineMultisampleStateCreateInfo::builder()
+        let multisampling = vk::PipelineMultisampleStateCreateInfo::default()
             .sample_shading_enable(false)
-            .rasterization_samples(vk::SampleCountFlags::TYPE_1)
-            .build();
+            .rasterization_samples(vk::SampleCountFlags::TYPE_1);
 
-        let color_blend_attachment = vk::PipelineColorBlendAttachmentState::builder()
+        let color_blend_attachment = vk::PipelineColorBlendAttachmentState::default()
             .color_write_mask(vk::ColorComponentFlags::R | vk::ColorComponentFlags::G | vk::ColorComponentFlags::B | vk::ColorComponentFlags::A)
-            .blend_enable(false)
-            .build();
+            .blend_enable(false);
 
-        let color_blending = vk::PipelineColorBlendStateCreateInfo::builder()
+        let color_blend_attachments = [color_blend_attachment];
+
+        let color_blending = vk::PipelineColorBlendStateCreateInfo::default()
             .logic_op_enable(false)
             .logic_op(vk::LogicOp::COPY)
-            .attachments(&[color_blend_attachment])
-            .blend_constants([0.0, 0.0, 0.0, 0.0])
-            .build();
+            .attachments(&color_blend_attachments)
+            .blend_constants([0.0, 0.0, 0.0, 0.0]);
 
-        let pipeline_layout_info = vk::PipelineLayoutCreateInfo::builder()
-            .set_layouts(&[])
-            .build();
+        let pipeline_layout_info = vk::PipelineLayoutCreateInfo::default();
 
         let layout = unsafe {
             device.create_pipeline_layout(&pipeline_layout_info, None)
                 .expect("Failed to create pipeline layout")
         };
 
-        let pipeline_info = vk::GraphicsPipelineCreateInfo::builder()
+        let pipeline_info = vk::GraphicsPipelineCreateInfo::default()
             .stages(&shader_stages)
             .vertex_input_state(&vertex_input_info)
             .input_assembly_state(&input_assembly)
@@ -108,8 +132,7 @@ impl VulkanGraphicsPipeline {
             .color_blend_state(&color_blending)
             .layout(layout)
             .render_pass(render_pass)
-            .subpass(0)
-            .build();
+            .subpass(0);
 
         let pipeline = unsafe {
             device.create_graphics_pipelines(vk::PipelineCache::null(), &[pipeline_info], None)
@@ -121,17 +144,10 @@ impl VulkanGraphicsPipeline {
             device.destroy_shader_module(frag_shader_module, None);
         }
 
-        Self { pipeline, layout }
+        Self { pipeline, layout, device }
     }
-
-    pub fn destroy(&self, device: &ash::Device) {
-        unsafe {
-            device.destroy_pipeline(self.pipeline, None);
-            device.destroy_pipeline_layout(self.layout, None);
-        }
-    }
-
-    fn read_shader_code<P: AsRef<Path>>(path: P) -> Vec<u8> {
+}
+    fn read_shader_code<P: AsRef<std::path::Path>>(path: P) -> Vec<u8> {
         use std::fs::File;
         use std::io::Read;
         let mut file = File::open(path).expect("Failed to open shader file");
@@ -140,27 +156,29 @@ impl VulkanGraphicsPipeline {
         code
     }
 
-    fn create_shader_module(device: &ash::Device, code: &[u8]) -> vk::ShaderModule {
-        let create_info = vk::ShaderModuleCreateInfo::builder()
-            .code(bytemuck::cast_slice(code))
-            .build();
+    fn create_shader_module(device: &Device, code: &[u8]) -> vk::ShaderModule {
+        let create_info = vk::ShaderModuleCreateInfo {
+            s_type: vk::StructureType::SHADER_MODULE_CREATE_INFO,
+            p_next: ptr::null(),
+            flags: vk::ShaderModuleCreateFlags::empty(),
+            code_size: code.len(),
+            p_code: code.as_ptr() as *const u32,
+            _marker: PhantomData
+        };
 
         unsafe {
             device.create_shader_module(&create_info, None)
                 .expect("Failed to create shader module")
         }
     }
-}
 
-fn example() {
-    // Example usage, requires initialization of Vulkan context, device, etc.
-    let device: ash::Device = unimplemented!(); // Obtain the Vulkan device
-    let swapchain_extent: vk::Extent2D = unimplemented!(); // Obtain swapchain extent
-    let render_pass: vk::RenderPass = unimplemented!(); // Obtain render pass
 
-    let graphics_pipeline = VulkanGraphicsPipeline::create(&device, swapchain_extent, render_pass);
-
-    // Do some rendering...
-
-    graphics_pipeline.destroy(&device);
+impl<'a> Drop for VulkanGraphicsPipeline<'a> {
+    fn drop(&mut self) {
+        unsafe {
+            // Assuming `device` is stored somewhere accessible
+            self.device.destroy_pipeline(self.pipeline, None);
+            self.device.destroy_pipeline_layout(self.layout, None);
+        }
+    }
 }
