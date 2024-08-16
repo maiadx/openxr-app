@@ -89,8 +89,19 @@ struct VulkanContext {
 
 impl VulkanContext {
     fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let entry = unsafe { Entry::linked() };
-        let app_name = CString::new("Vulkan Application")?;
+
+
+        #[cfg(feature = "static")]
+        let entry = xr::Entry::linked();
+        #[cfg(not(feature = "static"))]
+        let entry = unsafe {
+            xr::Entry::load()
+                .expect("couldn't find the OpenXR loader; try enabling the \"static\" feature")
+        };
+
+
+
+        let app_name = CString::new("Neon")?;
         let engine_name = CString::new("No Engine")?;
     
         let app_info = vk::ApplicationInfo {

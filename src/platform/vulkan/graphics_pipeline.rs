@@ -111,7 +111,7 @@ impl<'a> VulkanGraphicsPipeline<'a> {
 
         let color_blending = vk::PipelineColorBlendStateCreateInfo::default()
             .logic_op_enable(false)
-            .logic_op(vk::LogicOp::COPY)
+            .logic_op(vk::logicOp::COPY)
             .attachments(&color_blend_attachments)
             .blend_constants([0.0, 0.0, 0.0, 0.0]);
 

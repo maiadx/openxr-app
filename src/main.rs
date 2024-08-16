@@ -1,5 +1,5 @@
 // main.rs testing openxr sample code: 
-
+#![allow(unused_imports)]
 
 //! Illustrates rendering using Vulkan with multiview. Supports any Vulkan 1.1 capable environment.
 //!
@@ -7,11 +7,10 @@
 //!
 //! This example uses minimal abstraction for clarity. Real-world code should encapsulate and
 //! largely decouple its Vulkan and OpenXR components and handle errors gracefully.#[allow(non_snake_case)]
-#[allow(non_snake_case)]
 #[macro_use]
-mod Log;
+mod log;
 
-mod IO;
+mod io;
 
 
 use std::{
@@ -34,7 +33,7 @@ use openxr as xr;
 pub fn main() {
 
     // first - load all shaders with glslangValidator and compile them (will remove the unnecessary compilation later)
-    IO::ShaderCompiler::compile_all_shaders().expect("Something went wrong with shader compilation");
+    io::shader_compiler::compile_all_shaders().expect("Something went wrong with shader compilation");
 
 
         // Handle interrupts gracefully
@@ -44,6 +43,7 @@ pub fn main() {
             r.store(false, Ordering::Relaxed);
         })
         .expect("setting Ctrl-C handler");
+    
     
         #[cfg(feature = "static")]
         let entry = xr::Entry::linked();

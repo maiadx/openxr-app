@@ -5,16 +5,16 @@ use std::{
     process::Command,
 };
 
-use crate::Log;
+use std::io::{Read, Write,Error};
 
 // temp function which just compiles all shaders within directory, will eventually make compilation only occur with shaders which have been changed since compilation using spv comparision
 pub fn compile_all_shaders() -> Result<()> {
-    Log::info("Compiling shaders...");
+    info!("Compiling shaders:");
 
     let shaders_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("resources")
         .join("shaders");
-    Log::info(format!("Shader source directory: {:?}", shaders_path.as_os_str()).as_str());
+    // info!("Shader source directory: {:?}", shaders_path.to_str().unwrap_or(""));
 
     // Iterate over files in the directory
     for entry in fs::read_dir(shaders_path.clone())? {
@@ -24,7 +24,7 @@ pub fn compile_all_shaders() -> Result<()> {
         // Only compile files with known shader extensions (e.g., .vert, .frag, .comp)
         if let Some(extension) = path.extension() {
             if extension == "vert" || extension == "frag" || extension == "comp" {
-                Log::info(format!("Compiling shader: {:?}", path).as_str());
+                info!("Compiling shader: {:?}", path.to_str().unwrap_or(""));
                 
                 let original_extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
                 let output_path = path.with_extension(format!("{}.spv", original_extension));
@@ -41,15 +41,16 @@ pub fn compile_all_shaders() -> Result<()> {
                 match output {
                     Ok(output) => {
                         if !output.status.success() {
-                            crit!("Failed to compile shader: {}", path.as_os_str().to_string_lossy());
+                            crit!("Failed to compile shader: {}", path.to_str().expect("path malformed?"));
+                            return Err(Error::new(std::io::ErrorKind::InvalidInput, "Shader Compilation Failed!"))
                         } else {
-                            Log::info(format!(
-                                "Successfully compiled shader: {:?}",
-                                path
-                            ).as_str());
+                            info!("    Successfully compiled: {:?}", path.to_str().unwrap());
                         }
                     }
-                    Err(e) => crit!("Failed to run glslangValidator: {}", e)
+                    Err(e) => { 
+                        crit!("Failed to run glslangValidator: {}", e);
+                        return Err(e);
+                        }
                 }
             }
         }
