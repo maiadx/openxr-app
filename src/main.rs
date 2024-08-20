@@ -1,6 +1,6 @@
 // main.rs testing openxr sample code: 
 #![allow(unused_imports)]
-
+#![allow(dead_code)]
 //! Illustrates rendering using Vulkan with multiview. Supports any Vulkan 1.1 capable environment.
 //!
 //! Renders a smooth gradient across the entire view, with different colors per eye.
@@ -9,8 +9,9 @@
 //! largely decouple its Vulkan and OpenXR components and handle errors gracefully.#[allow(non_snake_case)]
 #[macro_use]
 mod log;
-
 mod io;
+mod platform;
+mod renderer;
 
 
 use std::{
@@ -32,10 +33,12 @@ use openxr as xr;
 #[cfg_attr(target_os = "android", ndk_glue::main)]
 pub fn main() {
 
-    // first - load all shaders with glslangValidator and compile them (will remove the unnecessary compilation later)
-    io::shader_compiler::compile_all_shaders().expect("Something went wrong with shader compilation");
+  
+}
 
 
+
+fn xr_vk_test() {
         // Handle interrupts gracefully
         let running = Arc::new(AtomicBool::new(true));
         let r = running.clone();
@@ -44,14 +47,9 @@ pub fn main() {
         })
         .expect("setting Ctrl-C handler");
     
-    
-        #[cfg(feature = "static")]
+
         let entry = xr::Entry::linked();
-        #[cfg(not(feature = "static"))]
-        let entry = unsafe {
-            xr::Entry::load()
-                .expect("couldn't find the OpenXR loader; try enabling the \"static\" feature")
-        };
+        
     
         #[cfg(target_os = "android")]
         entry.initialize_android_loader().unwrap();

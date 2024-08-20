@@ -1,7 +1,7 @@
 
 // Declare submodules
-pub mod context;
+pub mod renderer;
 
 
 // Re-export items if needed
-pub use context::*;
+pub use renderer::*;

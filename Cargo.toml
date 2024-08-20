@@ -10,23 +10,18 @@ ash =  { version = "0.38.0", features = ["linked"] }
 ash-window = "0.13"
 raw-window-handle = "0.6"
 ctrlc = "3.4"
-
+vk-mem = "0.4.0"
 
 # 'static' if windows: 
-[target.'cfg(windows)'.dependencies]
+# [target.'cfg(windows)'.dependencies]
 openxr = { version = "0.19.0", features = ["static"] }
 
 # 'linked' if linux:
-[target.'cfg(unix)'.dependencies]
-openxr = { version = "0.19.0", features = ["linked"] }
+# [target.'cfg(unix)'.dependencies]
+# openxr = { version = "0.19.0", features = ["linked"] }
 
 
 [features]
 default = []
 build_debug = []
 
-[target.'cfg(windows)'.features]        
-default = ["openxr"]
-
-[target.'cfg(unix)'.features]
-default = ["openxr"]
