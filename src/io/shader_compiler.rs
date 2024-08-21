@@ -1,3 +1,5 @@
+use mlog::*;
+
 use std::{
     fs,
     io::Result,
@@ -7,9 +9,7 @@ use std::{
     fs::File,
 };
 use ash::util::read_spv;
-use ash::vk::ShaderModule;
-use ash::vk::Device;
-use ash::vk::ShaderModuleCreateInfo;
+
 use std::io::{Read, Write,Error};
 
 // temp function which just compiles all shaders within directory, will eventually make compilation only occur with shaders which have been changed since compilation using spv comparision
@@ -60,35 +60,22 @@ pub fn compile_all_shaders() -> Result<()> {
             }
         }
     }
-    info!("Shader compilation successful :)");
+    success!("Shader compilation successful :)");
     Ok(())
 }
 
 
-pub fn load_spirv(vk_device: &ash::Device) -> (ash::vk::ShaderModule, ash::vk::ShaderModule) {
-    let vert_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/shaders/fullscreen.vert.spv");
-    let frag_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/shaders/debug_pattern.frag.spv");
+pub fn load_spirv_from_file(path: &str) -> Vec<u32> {
+    // Construct the path from the string
+    let shader_path = Path::new(path);
 
-    // Read vertex shader SPIR-V
-    let mut vert_file = File::open(vert_path).expect("Failed to open vertex shader file");
-    let mut vert_bytes = Vec::new();
-    vert_file.read_to_end(&mut vert_bytes).expect("Failed to read vertex shader file");
-    let vert_spv = read_spv(&mut Cursor::new(&vert_bytes)).expect("Failed to parse vertex shader SPIR-V");
+    // Read shader SPIR-V file
+    let mut file = File::open(shader_path).expect("Failed to open shader file");
+    let mut bytes = Vec::new();
+    file.read_to_end(&mut bytes).expect("Failed to read shader file");
 
-    // Read fragment shader SPIR-V
-    let mut frag_file = File::open(frag_path).expect("Failed to open fragment shader file");
-    let mut frag_bytes = Vec::new();
-    frag_file.read_to_end(&mut frag_bytes).expect("Failed to read fragment shader file");
-    let frag_spv = read_spv(&mut Cursor::new(&frag_bytes)).expect("Failed to parse fragment shader SPIR-V");
+    // Parse the SPIR-V file into a Vec<u32>
+    let spv_bytes = read_spv(&mut Cursor::new(&bytes)).expect("Failed to parse SPIR-V shader");
 
-    // Create shader modules
-    let vert_module = unsafe {vk_device
-        .create_shader_module(&ShaderModuleCreateInfo::default().code(&vert_spv), None)
-        .expect("Failed to create vertex shader module")};
-    let frag_module = unsafe { vk_device
-        .create_shader_module(&ShaderModuleCreateInfo::default().code(&frag_spv), None)
-        .expect("Failed to create fragment shader module") };
-
-    return (vert_module, frag_module)
+    spv_bytes
 }
-

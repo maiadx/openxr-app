@@ -7,8 +7,9 @@
 //!
 //! This example uses minimal abstraction for clarity. Real-world code should encapsulate and
 //! largely decouple its Vulkan and OpenXR components and handle errors gracefully.#[allow(non_snake_case)]
-#[macro_use]
-mod log;
+use mlog::*;
+
+
 mod io;
 mod platform;
 mod renderer;
@@ -32,8 +33,12 @@ use openxr as xr;
 #[allow(clippy::field_reassign_with_default)] // False positive, might be fixed 1.51
 #[cfg_attr(target_os = "android", ndk_glue::main)]
 pub fn main() {
+    
+    mlog::init(LogLevel::Info, Some("target/debug/test"));
 
-  
+    io::compile_all_shaders().ok();
+    success!("test :)")
+
 }
 
 

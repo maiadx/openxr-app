@@ -575,6 +575,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mlog"
+version = "0.1.0"
+source = "git+https://gitlab.com/ma1a/mlog.git#e0e6db80f2f8427bf1edce98ed350cd24fcb5f33"
+dependencies = [
+ "chrono",
+]
+
+[[package]]
 name = "ndk"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -611,6 +619,7 @@ dependencies = [
  "ash-window",
  "chrono",
  "ctrlc",
+ "mlog",
  "openxr",
  "raw-window-handle 0.6.2",
  "vk-mem",

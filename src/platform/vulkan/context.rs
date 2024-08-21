@@ -9,11 +9,17 @@ use std::marker::{PhantomData, PhantomPinned};
 use std::ptr;
 use openxr::{self as xr, Vulkan};
 
+use mlog::*;
+
+
 use crate::io;
-#[cfg(feature = "build_debug")]
+#[cfg(debug_assertions)]
 const USE_VK_VALIDATION_LAYERS: bool = true;
-#[cfg(not(feature = "build_debug"))]
+
+#[cfg(not(debug_assertions))]
 const USE_VK_VALIDATION_LAYERS: bool = false;
+
+use super::shader;
 
 
 pub const VIEW_COUNT: u32 = 2;
@@ -42,7 +48,6 @@ impl Default for VulkanSyncObjects {
 
 pub struct VulkanContext {
     entry : ash::Entry,
-    // app_info : vk::ApplicationInfo::default(),
     instance : ash::Instance,
     
     physical_device : vk::PhysicalDevice,
@@ -185,7 +190,7 @@ impl VulkanContext {
 
                 // load and compile shaders:
                 io::shader_compiler::compile_all_shaders().expect("Something went wrong with shader compilation");
-                let (vert_shader, frag_shader) = io::shader_compiler::load_spirv(&vk_device);
+                let (vert_shader, frag_shader) = shader::create_shader_modules(&vk_device);
                 
                 let pipeline_layout = vk_device
                 .create_pipeline_layout(
