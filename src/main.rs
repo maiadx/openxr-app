@@ -33,11 +33,24 @@ use openxr as xr;
 #[allow(clippy::field_reassign_with_default)] // False positive, might be fixed 1.51
 #[cfg_attr(target_os = "android", ndk_glue::main)]
 pub fn main() {
+
+    let log_config = mlog::LogConfig {
+        log_level : mlog::LogLevel::Info,
+        log_filepath : Some("target/debug/log".to_string()),
+        application_name : "neon".to_string(),
+        multi_threaded_flag : true,
+        async_flag : true,
+        console_flag : true,
+        time_format : "%H:%M:%S".to_string()
+
+    };
+
     
-    mlog::init(LogLevel::Info, Some("target/debug/test"));
+    mlog::init(log_config);
 
     io::compile_all_shaders().ok();
-    success!("test :)")
+
+    mlog::shutdown();
 
 }
 

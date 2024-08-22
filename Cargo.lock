@@ -577,7 +577,7 @@ dependencies = [
 [[package]]
 name = "mlog"
 version = "0.1.0"
-source = "git+https://gitlab.com/ma1a/mlog.git#e0e6db80f2f8427bf1edce98ed350cd24fcb5f33"
+source = "git+https://gitlab.com/ma1a/mlog.git#9cc5127d586e21af45c77cdd352cf0ab3c7e14d7"
 dependencies = [
  "chrono",
 ]

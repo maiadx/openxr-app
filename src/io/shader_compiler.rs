@@ -29,7 +29,7 @@ pub fn compile_all_shaders() -> Result<()> {
         // Only compile files with known shader extensions (e.g., .vert, .frag, .comp)
         if let Some(extension) = path.extension() {
             if extension == "vert" || extension == "frag" || extension == "comp" {
-                info!("Compiling shader: {:?}", path.to_str().unwrap_or(""));
+                info!("    Compiling shader: {:?}", path.to_str().unwrap_or(""));
                 
                 let original_extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
                 let output_path = path.with_extension(format!("{}.spv", original_extension));
@@ -49,7 +49,7 @@ pub fn compile_all_shaders() -> Result<()> {
                             crit!("Failed to compile shader: {}", path.to_str().expect("path malformed?"));
                             return Err(Error::new(std::io::ErrorKind::InvalidInput, "Shader Compilation Failed!"))
                         } else {
-                            info!("    Successfully compiled: {:?}", path.to_str().unwrap());
+                            info!("        Successfully compiled: {:?}", path.to_str().unwrap());
                         }
                     }
                     Err(e) => { 
