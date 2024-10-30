@@ -6,8 +6,8 @@ edition = "2021"
 [dependencies]
 chrono = "0.4.31"
 
-mlog = { git = "https://gitlab.com/ma1a/mlog.git" }
-# mlog = {path = "../mlog"}
+# mlog = { git = "https://gitlab.com/ma1a/mlog.git" }
+mlog = {path = "../mlog"}
 
 winit = "0.28"
 ash =  { version = "0.38.0", features = ["linked"] }
